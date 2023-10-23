@@ -31,7 +31,7 @@ fn main() {
     use std::env;
     let args: Vec<String> = env::args().collect();
     if args.len() > 1{
-        let mut text = decode_url(clear_ss(args[1].clone())).unwrap();
+        let text = decode_url(clear_ss(args[1].clone())).unwrap();
         println!("{}", text);
     }
     else{
