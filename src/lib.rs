@@ -24,12 +24,12 @@ pub struct ShadowSocksRaw {
 
 #[derive(Serialize, Deserialize)]
 pub struct ShadowSocksJSON {
-    server: String,
-    server_port: u32,
-    local_port: u32,
-    password: String,
-    method : String,
-    remarks: String,
+    pub server: String,
+    pub server_port: u32,
+    pub local_port: u32,
+    pub password: String,
+    pub method : String,
+    pub remarks: String,
 }
 
 

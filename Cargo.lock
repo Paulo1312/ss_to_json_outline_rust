@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "ss_to_json_outline"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "base64",
  "serde",
