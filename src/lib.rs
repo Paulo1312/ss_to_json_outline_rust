@@ -91,3 +91,13 @@ pub fn clear_ss(url_string: String) -> ShadowSocksRaw{
         }
     }    
 }
+
+pub fn ss_to_json(starting: String) -> Result<ShadowSocksJSON, ParsingError> {
+    let shadow_socks_raw = clear_ss(starting);
+    let text: String = decode_url(shadow_socks_raw.key)?;
+
+    let json = ShadowSocksJSON::from_decode_string(text, shadow_socks_raw.name)?;
+    
+    Ok(json)
+
+}
