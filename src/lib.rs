@@ -20,19 +20,27 @@ pub struct ShadowSocksRaw {
     pub key: String,
     pub name: String
 }
-#[macro_use] extern crate serde_derive;
 
+#[macro_use] extern crate serde_derive;
 #[derive(Serialize, Deserialize)]
 pub struct ShadowSocksJSON {
     pub server: String,
     pub server_port: u32,
+    pub local_address: String,
     pub local_port: u32,
     pub password: String,
     pub method : String,
     pub remarks: String,
 }
 
-
+#[derive(Serialize, Deserialize)]
+pub struct ShadowSocksJSONShort {
+    pub server: String,
+    pub server_port: u32,
+    pub password: String,
+    pub method : String,
+    pub remarks: String,
+}
 
 impl ShadowSocksJSON {
     pub fn from_decode_string(decode_string: String, name: String) -> Result<ShadowSocksJSON, ParsingError> {
@@ -48,12 +56,51 @@ impl ShadowSocksJSON {
             server: server_address_port.first().ok_or(ParsingError)?.to_string(),
             server_port: server_port,
             local_port: 1000_u32,
+            local_address: "127.0.0.1".to_string(),
+            password: server_method_password.last().ok_or(ParsingError)?.to_string(),
+            method: server_method_password.first().ok_or(ParsingError)?.to_string(),
+            remarks: name
+        })
+    }
+    pub fn set_local_port (mut self, local_port: u32)  {
+        self.local_port = local_port;
+    }
+
+    pub fn set_local_address(mut self, local_address: String) {
+        self.local_address = local_address;
+    }
+
+    pub fn to_short(self) -> ShadowSocksJSONShort {
+        ShadowSocksJSONShort{
+            server: self.server,
+            server_port: self.server_port,
+            password: self.password,
+            method: self.method,
+            remarks: self.remarks
+        }
+    }
+}
+
+impl ShadowSocksJSONShort {
+    pub fn from_decode_string(decode_string: String, name: String) -> Result<ShadowSocksJSONShort, ParsingError> {
+        let text: Vec<&str> = decode_string.split("@").collect();
+        let server_address_port: Vec<&str> = text.last().ok_or(ParsingError)?.split(":").collect();
+        let server_port = match server_address_port.last().ok_or(ParsingError)?.parse::<u32>(){
+            Ok(data) => Ok(data),
+            Err(_) => Err(ParsingError)
+        }?;
+        let server_method_password: Vec<&str> = text.first().ok_or(ParsingError)?.split(":").collect();
+
+        Ok(ShadowSocksJSONShort {
+            server: server_address_port.first().ok_or(ParsingError)?.to_string(),
+            server_port: server_port,
             password: server_method_password.last().ok_or(ParsingError)?.to_string(),
             method: server_method_password.first().ok_or(ParsingError)?.to_string(),
             remarks: name
         })
     }
 }
+
 pub fn decode_url(url_string: String) -> Result<String, ParsingError>{
     use base64::{Engine as _, alphabet, engine::{self, general_purpose}};
     let bytes_url = match  engine::GeneralPurpose::new(
