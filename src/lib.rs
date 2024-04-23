@@ -43,7 +43,7 @@ pub struct ShadowSocksJSONShort {
 }
 
 impl ShadowSocksJSON {
-    pub fn from_decode_string(decode_string: String, name: String) -> Result<ShadowSocksJSON, ParsingError> {
+    pub fn from_decode_string(decode_string: String, name: String, port: u32, local_address: String) -> Result<ShadowSocksJSON, ParsingError> {
         let text: Vec<&str> = decode_string.split("@").collect();
         let server_address_port: Vec<&str> = text.last().ok_or(ParsingError)?.split(":").collect();
         let server_port = match server_address_port.last().ok_or(ParsingError)?.parse::<u32>(){
@@ -55,19 +55,12 @@ impl ShadowSocksJSON {
         Ok(ShadowSocksJSON {
             server: server_address_port.first().ok_or(ParsingError)?.to_string(),
             server_port: server_port,
-            local_port: 1000_u32,
-            local_address: "127.0.0.1".to_string(),
+            local_port: port,
+            local_address: local_address,
             password: server_method_password.last().ok_or(ParsingError)?.to_string(),
             method: server_method_password.first().ok_or(ParsingError)?.to_string(),
             remarks: name
         })
-    }
-    pub fn set_local_port (mut self, local_port: u32)  {
-        self.local_port = local_port;
-    }
-
-    pub fn set_local_address(mut self, local_address: String) {
-        self.local_address = local_address;
     }
 
     pub fn to_short(self) -> ShadowSocksJSONShort {
@@ -143,8 +136,28 @@ pub fn ss_to_json(starting: String) -> Result<ShadowSocksJSON, ParsingError> {
     let shadow_socks_raw = clear_ss(starting);
     let text: String = decode_url(shadow_socks_raw.key)?;
 
-    let json = ShadowSocksJSON::from_decode_string(text, shadow_socks_raw.name)?;
+    let json = ShadowSocksJSON::from_decode_string(text, shadow_socks_raw.name, 1000, "127.0.0.1".to_string())?;
     
     Ok(json)
 
+}
+
+
+pub fn ss_to_json_port_address(starting: String, port: u32, address: String) -> Result<ShadowSocksJSON, ParsingError> {
+    let shadow_socks_raw = clear_ss(starting);
+    let text: String = decode_url(shadow_socks_raw.key)?;
+
+    let json = ShadowSocksJSON::from_decode_string(text, shadow_socks_raw.name, port, address)?;
+    
+    Ok(json)
+
+}
+
+pub fn ss_to_json_short(starting: String) -> Result<ShadowSocksJSONShort, ParsingError> {
+    let shadow_socks_raw = clear_ss(starting);
+    let text: String = decode_url(shadow_socks_raw.key)?;
+
+    let json = ShadowSocksJSONShort::from_decode_string(text, shadow_socks_raw.name)?;
+    
+    Ok(json)
 }
