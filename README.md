@@ -1,16 +1,3 @@
-# ALARM
-## EO
-
-**Versio 0.3.4 ne ludas kun formato ss://(key)@(ip):(port)/?outline=1. Baldaŭ mi solvos tiun problemon**
-
-## RU
-
-**Версия 0.3.4 не совместима с форматом ss://(key)@(ip):(port)/?outline=1. В близжайшее время решу эту проблему**
-
-## EN
-
-**Version 0.3.4 don't work with ss://(key)@(ip):(port)/?outline=1 format. I will solve this problem in nearest future!**
-
 # EO
 
 Saluton!
@@ -24,6 +11,9 @@ Tio estas mia skripto por restrukturi elčifrigilon SS-an en *JSON* dosieron.
 Se vi volas skribi datumo en dosiero - vi povas uzati tiun komandon:
 
 `cargo run *via ligilo* > config.json`
+
+## Renovigoj
+- 0.4.0: Aldonis apogon de nova protokolo por outlajno
 
 # RU
 
@@ -39,6 +29,9 @@ Se vi volas skribi datumo en dosiero - vi povas uzati tiun komandon:
 
 `cargo run *ссылка* > config.json`
 
+## Updates
+- 0.4.0: Добавлена поддержка нового формата конфигов для Outline
+
 # EN
 
 Hello!
@@ -52,3 +45,6 @@ That's my script for refactoring a SS decryptor into a *JSON* file.
 If you want to write data in a file - you can use this command:
 
 `cargo run *your link* > config.json`
+
+## Updates
+- 0.4.0: Added support of new configuration format for Outline
