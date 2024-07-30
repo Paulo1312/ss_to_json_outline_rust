@@ -1,6 +1,6 @@
 use regex::{Captures, Regex};
 use std::fmt;
-
+use urlencoding::decode;
 pub struct ParsingError;
 
 impl fmt::Display for ParsingError {
@@ -78,7 +78,7 @@ pub fn config_from_string_type_1(starting: Captures) -> Result<ShadowSocksJSON, 
         local_port: 1000,
         password: data1.name("Password").unwrap().as_str().to_string(),
         method: data1.name("Method").unwrap().as_str().to_string(),
-        remarks: starting.name("Remarks").unwrap().as_str().to_string()
+        remarks: decode(starting.name("Remarks").unwrap().as_str()).unwrap().replace("+", "_").to_string()
     })
 
 }
@@ -98,7 +98,7 @@ pub fn config_from_string_type_2(starting: Captures) -> Result<ShadowSocksJSON, 
         local_port: 1000,
         password: data1.name("Password").ok_or(ParsingError)?.as_str().to_string(),
         method: data1.name("Method").ok_or(ParsingError)?.as_str().to_string(),
-        remarks: starting.name("Remarks").ok_or(ParsingError)?.as_str().to_string()
+        remarks: decode(starting.name("Remarks").unwrap().as_str()).unwrap().replace("+", "_").to_string()
     })
 }
 
@@ -107,7 +107,7 @@ pub fn ss_to_json(starting: String) -> Result<ShadowSocksJSON, ParsingError> {
     let type_1_ss_config_reges = Regex::new(r"(?P<Prefix>[s]{2}[:][/]{2})(?P<base64text>[[:alnum:]]+)#(?P<Remarks>\d{1,3}\+((%\w{2})|\+)+)").unwrap(); 
     // New ss://<base64 coded config>@<addr>:<port>?<type>prefix=<prefix> But this is configure for outline configs. 
     // May be you have other attributes. In this case you should do other thing (And, please, write to me)
-    let type_2_ss_config_regex = Regex::new(r"[s]{2}[:][/]{2}(?P<base64text>.+)@(?P<IpAddr>(\d{1,3})(.\d{1,3}){3}):(?P<Port>\d{1,6})/\?outline=1&prefix=(?P<Remarks>.+)").unwrap(); 
+    let type_2_ss_config_regex = Regex::new(r"[s]{2}[:][/]{2}(?P<base64text>.+)@(?P<IpAddr>(\d{1,3})(.\d{1,3}){3}):(?P<Port>\d{1,6})/\?outline=1&prefix=.+#(?P<Remarks>.+)").unwrap(); 
 
     let json = match type_1_ss_config_reges.captures(starting.as_str()){
         Some(data1) => {
