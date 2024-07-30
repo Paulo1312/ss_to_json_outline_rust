@@ -1,5 +1,4 @@
-use urlencoding::decode;
-
+use regex::{Captures, Regex};
 use std::fmt;
 
 pub struct ParsingError;
@@ -14,11 +13,6 @@ impl fmt::Debug for ParsingError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{{ file: {}, line: {} }}", file!(), line!()) // programmer-facing output
     }
-}
-
-pub struct ShadowSocksRaw {
-    pub key: String,
-    pub name: String
 }
 
 #[macro_use] extern crate serde_derive;
@@ -43,26 +37,6 @@ pub struct ShadowSocksJSONShort {
 }
 
 impl ShadowSocksJSON {
-    pub fn from_decode_string(decode_string: String, name: String, port: u32, local_address: String) -> Result<ShadowSocksJSON, ParsingError> {
-        let text: Vec<&str> = decode_string.split("@").collect();
-        let server_address_port: Vec<&str> = text.last().ok_or(ParsingError)?.split(":").collect();
-        let server_port = match server_address_port.last().ok_or(ParsingError)?.parse::<u32>(){
-            Ok(data) => Ok(data),
-            Err(_) => Err(ParsingError)
-        }?;
-        let server_method_password: Vec<&str> = text.first().ok_or(ParsingError)?.split(":").collect();
-
-        Ok(ShadowSocksJSON {
-            server: server_address_port.first().ok_or(ParsingError)?.to_string(),
-            server_port: server_port,
-            local_port: port,
-            local_address: local_address,
-            password: server_method_password.last().ok_or(ParsingError)?.to_string(),
-            method: server_method_password.first().ok_or(ParsingError)?.to_string(),
-            remarks: name
-        })
-    }
-
     pub fn to_short(self) -> ShadowSocksJSONShort {
         ShadowSocksJSONShort{
             server: self.server,
@@ -71,26 +45,6 @@ impl ShadowSocksJSON {
             method: self.method,
             remarks: self.remarks
         }
-    }
-}
-
-impl ShadowSocksJSONShort {
-    pub fn from_decode_string(decode_string: String, name: String) -> Result<ShadowSocksJSONShort, ParsingError> {
-        let text: Vec<&str> = decode_string.split("@").collect();
-        let server_address_port: Vec<&str> = text.last().ok_or(ParsingError)?.split(":").collect();
-        let server_port = match server_address_port.last().ok_or(ParsingError)?.parse::<u32>(){
-            Ok(data) => Ok(data),
-            Err(_) => Err(ParsingError)
-        }?;
-        let server_method_password: Vec<&str> = text.first().ok_or(ParsingError)?.split(":").collect();
-
-        Ok(ShadowSocksJSONShort {
-            server: server_address_port.first().ok_or(ParsingError)?.to_string(),
-            server_port: server_port,
-            password: server_method_password.last().ok_or(ParsingError)?.to_string(),
-            method: server_method_password.first().ok_or(ParsingError)?.to_string(),
-            remarks: name
-        })
     }
 }
 
@@ -109,55 +63,76 @@ pub fn decode_url(url_string: String) -> Result<String, ParsingError>{
     }
 }
 
-pub fn clear_ss(url_string: String) -> ShadowSocksRaw{
-    let url_split = if url_string.contains("ss:"){ //Delete ss:// if ss address contains it
-        url_string.split("ss://").collect::<Vec<&str>>()[1]
-        
-    }
-    else{
-        &url_string
-    };
+pub fn config_from_string_type_1(starting: Captures) -> Result<ShadowSocksJSON, ParsingError> {
+    let new_re = Regex::new(r"(?P<Method>.+):(?P<Password>.+)@(?P<Address>.+)(?P<Port>\d{1,6})").unwrap();
+    let text: String = decode_url(starting.name("base64text").unwrap().as_str().to_string()).unwrap().to_string();
 
-    if url_split.contains("#"){       
-        ShadowSocksRaw {
-            key: url_split.split("#").collect::<Vec<&str>>()[0].to_string(),
-            name: decode(url_split.split("#").collect::<Vec<&str>>()[1]).expect("UTF-8").replace("+", " ").to_string()
-        }               
-    }       
-    else{
-        ShadowSocksRaw {
-            key: url_split.split("#").collect::<Vec<&str>>()[0].to_string(),
-            name: "No_Name".to_string()
-        }
-    }    
+    let data1 = new_re.captures(&text).unwrap();
+    Ok(ShadowSocksJSON{
+        server: data1.name("Address").unwrap().as_str().to_string(),
+        server_port: match data1.name("Port").unwrap().as_str().parse::<u32>(){
+            Ok(data3) => Ok(data3 as u32),
+            Err(_) => Err(ParsingError)
+        }?,
+        local_address: "127.0.0.1".to_string(),
+        local_port: 1000,
+        password: data1.name("Password").unwrap().as_str().to_string(),
+        method: data1.name("Method").unwrap().as_str().to_string(),
+        remarks: starting.name("Remarks").unwrap().as_str().to_string()
+    })
+
+}
+
+pub fn config_from_string_type_2(starting: Captures) -> Result<ShadowSocksJSON, ParsingError> {
+    let new_re = Regex::new(r"(?P<Method>.+):(?<Password>.+)").unwrap();
+    let text: String = decode_url(starting.name("base64text").unwrap().as_str().to_string()).unwrap().to_string();
+    
+    let data1 = new_re.captures(&text).ok_or(ParsingError)?;
+    Ok(ShadowSocksJSON{
+        server: starting.name("IpAddr").ok_or(ParsingError)?.as_str().to_string(),
+        server_port: match starting.name("Port").ok_or(ParsingError)?.as_str().parse::<u32>(){
+            Ok(data3) => Ok(data3 as u32),
+            Err(_) => Err(ParsingError)
+        }?,
+        local_address: "127.0.0.1".to_string(),
+        local_port: 1000,
+        password: data1.name("Password").ok_or(ParsingError)?.as_str().to_string(),
+        method: data1.name("Method").ok_or(ParsingError)?.as_str().to_string(),
+        remarks: starting.name("Remarks").ok_or(ParsingError)?.as_str().to_string()
+    })
 }
 
 pub fn ss_to_json(starting: String) -> Result<ShadowSocksJSON, ParsingError> {
-    let shadow_socks_raw = clear_ss(starting);
-    let text: String = decode_url(shadow_socks_raw.key)?;
+    // Old ss://<base64 coded config>#<remark>
+    let type_1_ss_config_reges = Regex::new(r"(?P<Prefix>[s]{2}[:][/]{2})(?P<base64text>[[:alnum:]]+)#(?P<Remarks>\d{1,3}\+((%\w{2})|\+)+)").unwrap(); 
+    // New ss://<base64 coded config>@<addr>:<port>?<type>prefix=<prefix> But this is configure for outline configs. 
+    // May be you have other attributes. In this case you should do other thing (And, please, write to me)
+    let type_2_ss_config_regex = Regex::new(r"[s]{2}[:][/]{2}(?P<base64text>.+)@(?P<IpAddr>(\d{1,3})(.\d{1,3}){3}):(?P<Port>\d{1,6})/\?outline=1&prefix=(?P<Remarks>.+)").unwrap(); 
 
-    let json = ShadowSocksJSON::from_decode_string(text, shadow_socks_raw.name, 1000, "127.0.0.1".to_string())?;
-    
+    let json = match type_1_ss_config_reges.captures(starting.as_str()){
+        Some(data1) => {
+            config_from_string_type_1(data1)
+        },
+        None => {
+            let data1 = type_2_ss_config_regex.captures(starting.as_str()).ok_or(ParsingError)?;
+            config_from_string_type_2(data1)
+        }
+    }?;
+
     Ok(json)
 
 }
 
 
 pub fn ss_to_json_port_address(starting: String, port: u32, address: String) -> Result<ShadowSocksJSON, ParsingError> {
-    let shadow_socks_raw = clear_ss(starting);
-    let text: String = decode_url(shadow_socks_raw.key)?;
-
-    let json = ShadowSocksJSON::from_decode_string(text, shadow_socks_raw.name, port, address)?;
+    let mut old_json = ss_to_json(starting)?;
+    old_json.local_address = address;
+    old_json.local_port = port;
     
-    Ok(json)
+    Ok(old_json)
 
 }
 
 pub fn ss_to_json_short(starting: String) -> Result<ShadowSocksJSONShort, ParsingError> {
-    let shadow_socks_raw = clear_ss(starting);
-    let text: String = decode_url(shadow_socks_raw.key)?;
-
-    let json = ShadowSocksJSONShort::from_decode_string(text, shadow_socks_raw.name)?;
-    
-    Ok(json)
+    Ok(ss_to_json(starting)?.to_short())
 }
