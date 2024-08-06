@@ -68,6 +68,7 @@ pub fn config_from_string_type_1(starting: Captures) -> Result<ShadowSocksJSON, 
     let text: String = decode_url(starting.name("base64text").unwrap().as_str().to_string()).unwrap().to_string();
 
     let data1 = new_re.captures(&text).unwrap();
+    println!("TEST1");
     Ok(ShadowSocksJSON{
         server: data1.name("Address").unwrap().as_str().to_string(),
         server_port: match data1.name("Port").unwrap().as_str().parse::<u32>(){
@@ -84,6 +85,7 @@ pub fn config_from_string_type_1(starting: Captures) -> Result<ShadowSocksJSON, 
 }
 
 pub fn config_from_string_type_2(starting: Captures) -> Result<ShadowSocksJSON, ParsingError> {
+    println!("TEST2");
     let new_re = Regex::new(r"(?P<Method>.+):(?<Password>.+)").unwrap();
     let text: String = decode_url(starting.name("base64text").unwrap().as_str().to_string()).unwrap().to_string();
     
@@ -103,11 +105,12 @@ pub fn config_from_string_type_2(starting: Captures) -> Result<ShadowSocksJSON, 
 }
 
 pub fn ss_to_json(starting: String) -> Result<ShadowSocksJSON, ParsingError> {
+    println!("TEST");
     // Old ss://<base64 coded config>#<remark>
     let type_1_ss_config_reges = Regex::new(r"(?P<Prefix>[s]{2}[:][/]{2})(?P<base64text>[[:alnum:]]+)#(?P<Remarks>\d{1,3}\+((%\w{2})|\+)+)").unwrap(); 
     // New ss://<base64 coded config>@<addr>:<port>?<type>prefix=<prefix> But this is configure for outline configs. 
     // May be you have other attributes. In this case you should do other thing (And, please, write to me)
-    let type_2_ss_config_regex = Regex::new(r"[s]{2}[:][/]{2}(?P<base64text>.+)@(?P<IpAddr>(\d{1,3})(.\d{1,3}){3}):(?P<Port>\d{1,6})/\?outline=1&prefix=.+#(?P<Remarks>.+)").unwrap(); 
+    let type_2_ss_config_regex = Regex::new(r"[s]{2}[:][/]{2}(?P<base64text>.+)@(?P<IpAddr>((\d{1,3})(.\d{1,3}){3})|(.+)):(?P<Port>\d{1,6})/\?(?P<Params>((\w+)=.+)+)#(?P<Remarks>.+)").unwrap(); 
 
     let json = match type_1_ss_config_reges.captures(starting.as_str()){
         Some(data1) => {
