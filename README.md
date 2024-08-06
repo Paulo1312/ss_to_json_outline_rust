@@ -13,7 +13,8 @@ Se vi volas skribi datumo en dosiero - vi povas uzati tiun komandon:
 `cargo run *via ligilo* > config.json`
 
 ## Renovigoj
-- 0.4.0: Aldonis apogon de nova protokolo por outlajno
+### 0.4.0: Aldonis apogon de nova protokolo por outlajno
+### 0.4.2: Riparis regulan esprimon
 
 # RU
 
@@ -29,9 +30,9 @@ Se vi volas skribi datumo en dosiero - vi povas uzati tiun komandon:
 
 `cargo run *ссылка* > config.json`
 
-## Updates
-- 0.4.0: Добавлена поддержка нового формата конфигов для Outline
-
+## Обновления
+### 0.4.0: Добавлена поддержка нового формата конфигов для Outline
+### 0.4.2: Починена регулярка
 # EN
 
 Hello!
@@ -47,4 +48,5 @@ If you want to write data in a file - you can use this command:
 `cargo run *your link* > config.json`
 
 ## Updates
-- 0.4.0: Added support of new configuration format for Outline
+### 0.4.0: Added support of new configuration format for Outline
+### 0.4.2: Fixed regular expression
