@@ -64,9 +64,8 @@ pub fn decode_url(url_string: String) -> Result<String, ParsingError>{
 }
 
 pub fn config_from_string_type_1(starting: Captures) -> Result<ShadowSocksJSON, ParsingError> {
-    let new_re = Regex::new(r"(?P<Method>.+):(?P<Password>.+)@(?P<Address>.+)(?P<Port>\d{1,6})").unwrap();
+    let new_re = Regex::new(r"(?P<Method>.+):(?P<Password>.+)@(?P<Address>.+):(?P<Port>\d{1,6})").unwrap();
     let text: String = decode_url(starting.name("base64text").unwrap().as_str().to_string()).unwrap().to_string();
-
     let data1 = new_re.captures(&text).unwrap();
     Ok(ShadowSocksJSON{
         server: data1.name("Address").unwrap().as_str().to_string(),
@@ -88,6 +87,7 @@ pub fn config_from_string_type_2(starting: Captures) -> Result<ShadowSocksJSON, 
     let text: String = decode_url(starting.name("base64text").unwrap().as_str().to_string()).unwrap().to_string();
     
     let data1 = new_re.captures(&text).ok_or(ParsingError)?;
+
     Ok(ShadowSocksJSON{
         server: starting.name("IpAddr").ok_or(ParsingError)?.as_str().to_string(),
         server_port: match starting.name("Port").ok_or(ParsingError)?.as_str().parse::<u32>(){
